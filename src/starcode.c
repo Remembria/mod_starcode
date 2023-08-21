@@ -232,14 +232,25 @@ static double CLUSTER_RATIO = 5.0;         // min parent/child ratio
 
 void
 head_default(useq_t* u, propt_t propt) {
+
   useq_t* cncal = u->canonical;
   char* seq = propt.pe_fastq ? cncal->info : cncal->seq;
+  
+  char header[M] = {0};
+  char b[M] = {0};
+  char length[M] = {0};
+  char quality[M] = {0};
+  //sscanf(u->info, "%s %s %s\n%s", header, b, length, quality);  
+  sscanf(cncal->info, "%s %s %s\n%s", header, b, length, quality);
 
-  fprintf(OUTPUTF1, "%s%s\t%ld", propt.first, seq, cncal->count);
+  fprintf(OUTPUTF1, "%s%s\t%ld\t%s", propt.first, seq, cncal->count, quality);
 
   if (propt.showclusters) {
     char* seq = propt.pe_fastq ? u->info : u->seq;
     fprintf(OUTPUTF1, "\t%s", seq);
+    for (unsigned int i = 1; i < u->nids; i++) {
+      fprintf(OUTPUTF1, ",%s", seq);
+    }
   }
 }
 
@@ -248,7 +259,10 @@ members_mp_default(useq_t* u, propt_t propt) {
   if (!propt.showclusters)
     return;
   char* seq = propt.pe_fastq ? u->info : u->seq;
-  fprintf(OUTPUTF1, ",%s", seq);
+  //fprintf(OUTPUTF1, ",%s", seq);
+  for (unsigned int i = 0; i < u->nids; i++) {
+    fprintf(OUTPUTF1, ",%s", seq);
+  }
 }
 
 void
@@ -1540,7 +1554,8 @@ read_fastq(FILE* inputf, gstack_t* uSQ) {
   char info[2 * M + 2] = {0};
   size_t lineno = 0;
 
-  int const readh = OUTPUTT == NRED_OUTPUT;
+  //int const readh = OUTPUTT == NRED_OUTPUT;
+  int const readh = 1;
   while ((nread = getline(&line, &nchar, inputf)) != -1) {
     lineno++;
     // Strip newline character.
